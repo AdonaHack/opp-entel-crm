@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>CRM OPP - Entel Empresas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- ENCABEZADO CORPORATIVO CON LOGO OFICIAL -->
+        <header style="display: flex; align-items: center; justify-content: space-between; background: #ffffff; padding: 20px 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; border-top: 4px solid #FF6600;">
+            <div>
+                <img src="{{ url_for('static', filename='logo_entel.png') }}" alt="Entel Empresas" style="height: 65px; object-fit: contain;">
+            </div>
+            <div>
+                <h2 style="margin: 0; font-size: 18px; color: #555; font-weight: 600;">Control de OPP - RUC 10</h2>
+            </div>
+        </header>
+
+        <!-- SECCIÓN DE CONSULTA DE RUC -->
+        <section class="card">
+            <h3>¿Esta cuenta ya está siendo trabajada?</h3>
+            <p>Escribe el RUC del cliente para verificar si ya tiene una OPP activa antes de registrarla (vigencia de 7 días).</p>
+            <input type="text" id="rucBusqueda" placeholder="Ingrese RUC 10 (11 dígitos)" maxlength="11">
+            <button onclick="verificarRuc()">Verificar RUC</button>
+            <div id="resultadoVerificacion"></div>
+        </section>
+
+        <!-- SECCIÓN DE REGISTRO DE OPP (OCULTA HASTA VALIDAR) -->
+        <section class="card" id="seccionRegistro" style="display:none;">
+            <h3>Registro de OPP - RUC 10 Gpon Fuerza Terreno</h3>
+            <form id="formOpp" onsubmit="registrarOpp(event)">
+                <label><b>NUMERO DE RUC:</b></label>
+                <input type="text" id="regRuc" readonly style="background-color: #e9ecef; font-weight: bold;">
+
+                <label><b>DIRECCION DEL CLIENTE *:</b></label>
+                <!-- Campo de dirección totalmente vacío sin texto de ejemplo -->
+                <input type="text" id="regDireccion" required>
+
+                <label><b>DISTRITO *:</b></label>
+                <select id="regDistrito" required>
+                    <option value="">Seleccione un distrito</option>
+                    <option value="ATE">ATE</option>
+                    <option value="BARRANCO">BARRANCO</option>
+                    <option value="BREÑA">BREÑA</option>
+                    <option value="CALLAO">CALLAO</option>
+                    <option value="CHORRILLOS">CHORRILLOS</option>
+                    <option value="COMAS">COMAS</option>
+                    <option value="INDEPENDENCIA">INDEPENDENCIA</option>
+                    <option value="JESUS MARIA">JESUS MARIA</option>
+                    <option value="LA MOLINA">LA MOLINA</option>
+                    <option value="LA VICTORIA">LA VICTORIA</option>
+                    <option value="LIMA">LIMA</option>
+                    <option value="LINCE">LINCE</option>
+                    <option value="LOS OLIVOS">LOS OLIVOS</option>
+                    <option value="MIRAFLORES">MIRAFLORES</option>
+                    <option value="SAN BORJA">SAN BORJA</option>
+                    <option value="SAN ISIDRO">SAN ISIDRO</option>
+                    <option value="SAN LUIS">SAN LUIS</option>
+                    <option value="SAN MARTIN DE PORRES">SAN MARTIN DE PORRES</option>
+                    <option value="SAN MIGUEL">SAN MIGUEL</option>
+                    <option value="SANTA ANITA">SANTA ANITA</option>
+                    <option value="SANTIAGO DE SURCO">SANTIAGO DE SURCO</option>
+                    <option value="SURQUILLO">SURQUILLO</option>
+                </select>
+
+                <label><b>NOMBRE DEL EJECUTIVO *:</b></label>
+                <input type="text" id="regEjecutivo" required placeholder="Ingrese nombre del ejecutivo">
+
+                <label><b>DEALER *:</b></label>
+                <!-- Primera opción obligatoria "Elija un dealer" -->
+                <select id="regDealer" required>
+                    <option value="">Elija un dealer</option>
+                    <option value="SMARTMEDIA">SMARTMEDIA</option>
+                    <option value="ACTITUD GROUP">ACTITUD GROUP</option>
+                    <option value="RAYDERS">RAYDERS</option>
+                    <option value="COMUNITEL">COMUNITEL</option>
+                    <option value="CYA">CYA</option>
+                    <option value="STARGI">STARGI</option>
+                    <option value="MOBILENET">MOBILENET</option>
+                    <option value="DIGITEL">DIGITEL</option>
+                    <option value="STEELCOM">STEELCOM</option>
+                    <option value="SADE">SADE</option>
+                    <option value="INFINITY">INFINITY</option>
+                    <option value="ALLMARK">ALLMARK</option>
+                    <option value="TCONTACTO">TCONTACTO</option>
+                    <option value="INTERCON">INTERCON</option>
+                    <option value="LUXTEL">LUXTEL</option>
+                    <option value="MKCORP">MKCORP</option>
+                </select>
+
+                <button type="submit" class="btn-primary">Registrar OPP Oficial</button>
+            </form>
+            <div id="resultadoRegistro"></div>
+        </section>
+    </div>
+
+    <!-- BOTÓN FLOTANTE DE REGLAS -->
+    <button onclick="abrirReglas()" style="position: fixed; bottom: 25px; right: 25px; background-color: #002D62; color: white; border: none; border-radius: 50px; padding: 12px 20px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer; z-index: 1000;">
+        📜 Ver Reglas de OPP
+    </button>
+
+    <!-- VENTANA FLOTANTE (MODAL) DE REGLAS -->
+    <div id="modalReglas" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 600px; max-height: 85vh; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative;">
+            <h3 style="color: #002D62; margin-top: 0;">Reglas y Procedimiento - OPP RUC 10</h3>
+            <hr style="border: 0; border-top: 1px solid #eee; margin-bottom: 15px;">
+            
+            <h4 style="color: #FF6600; margin-bottom: 5px;">Pautas Generales:</h4>
+            <ul style="line-height: 1.5; color: #444; font-size: 13px; padding-left: 20px; margin-top: 5px;">
+                <li>Si el RUC aparece, significa que la cuenta ya está siendo trabajada por otro dealer.</li>
+                <li>La reserva tiene una vigencia exacta de <b>7 días calendario</b> desde la fecha de creación y no tiene ampliaciones.</li>
+                <li><b>Liberación automática:</b> Al cumplirse los 7 días de vigencia, el sistema libera la cuenta de forma automática y queda disponible para cualquier dealer.</li>
+            </ul>
+
+            <h4 style="color: #FF6600; margin-bottom: 5px; margin-top: 15px;">Importante:</h4>
+            <ul style="line-height: 1.5; color: #444; font-size: 13px; padding-left: 20px; margin-top: 5px;">
+                <li>Todos los dealers deberán adecuarse a este nuevo procedimiento.</li>
+                <li>Antes de trabajar cualquier cuenta, es <b>obligatorio validar el RUC</b> y registrarlo si está disponible.</li>
+                <li>Si una venta se instala sobre una cuenta registrada por otro dealer dentro del período de vigencia, <b>la venta será reasignada al dealer que realizó el registro</b> como respaldo oficial.</li>
+                <li>No se aceptarán reclamos por cuentas que no hayan sido registradas previamente en el formulario.</li>
+            </ul>
+
+            <h4 style="color: #FF6600; margin-bottom: 5px; margin-top: 15px;">Ampliaciones de OPP RUC 10:</h4>
+            <ul style="line-height: 1.5; color: #444; font-size: 13px; padding-left: 20px; margin-top: 5px;">
+                <li>Sí se aceptan ampliaciones <b>siempre y cuando sea para una dirección diferente</b> (corresponde a un nuevo punto de instalación y nueva venta).</li>
+                <li>Si la nueva OPP es para el <b>mismo punto</b> de la OPP ya existente y vencida, <b>no aplica</b> la ampliación.</li>
+            </ul>
+
+            <button onclick="cerrarReglas()" style="background-color: #FF6600; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 20px;">
+                Cerrar Ventana
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function abrirReglas() {
+            document.getElementById("modalReglas").style.display = "flex";
+        }
+
+        function cerrarReglas() {
+            document.getElementById("modalReglas").style.display = "none";
+        }
+
+        let rucActual = "";
+
+        async function verificarRuc() {
+            rucActual = document.getElementById("rucBusqueda").value.trim();
+            const resDiv = document.getElementById("resultadoVerificacion");
+            const regSection = document.getElementById("seccionRegistro");
+
+            const response = await fetch('/verificar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ruc: rucActual })
+            });
+            const data = await response.json();
+
+            if (data.status === "ocupado") {
+                resDiv.className = "alert error";
+                resDiv.innerHTML = `⛔ <b>¡ALERTA! El RUC ya cuenta con una OPP activa.</b><br>Dealer: <b>${data.dealer}</b><br>Vence el: ${data.vencimiento}`;
+                regSection.style.display = "none";
+            } else if (data.status === "libre") {
+                resDiv.className = "alert success";
+                resDiv.innerHTML = `✅ El RUC <b>${rucActual}</b> está LIBRE y disponible para registro.`;
+                document.getElementById("regRuc").value = rucActual;
+                regSection.style.display = "block";
+            } else {
+                resDiv.className = "alert error";
+                resDiv.innerHTML = "⚠️ " + data.message;
+                regSection.style.display = "none";
+            }
+        }
+
+        async function registrarOpp(e) {
+            e.preventDefault();
+            // Convertimos el nombre del ejecutivo a MAYÚSCULAS automáticamente antes de enviarlo
+            const ejecutivoInput = document.getElementById("regEjecutivo").value.trim().toUpperCase();
+
+            const datos = {
+                ruc: rucActual,
+                direccion: document.getElementById("regDireccion").value.trim(),
+                distrito: document.getElementById("regDistrito").value,
+                ejecutivo: ejecutivoInput,
+                dealer: document.getElementById("regDealer").value
+            };
+
+            const response = await fetch('/registrar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datos)
+            });
+            const data = await response.json();
+
+            const regRes = document.getElementById("resultadoRegistro");
+            if (data.status === "success") {
+                regRes.className = "alert success";
+                regRes.innerHTML = "🎉 ¡OPP registrada con éxito en Google Sheets! Queda bloqueada por 7 días.";
+                document.getElementById("formOpp").reset();
+                setTimeout(() => { location.reload(); }, 3000);
+            } else {
+                regRes.className = "alert error";
+                regRes.innerHTML = "❌ Error al registrar: " + data.message;
+            }
+        }
+    </script>
+</body>
+</html>
